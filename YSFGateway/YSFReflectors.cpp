@@ -36,6 +36,8 @@ m_YSF2NXDNAddress(),
 m_YSF2NXDNPort(0U),
 m_YSF2P25Address(),
 m_YSF2P25Port(0U),
+m_YSFSAddress(),
+m_YSFSPort(0U),
 m_fcsRooms(),
 m_newReflectors(),
 m_currReflectors(),
@@ -98,6 +100,12 @@ void CYSFReflectors::setYSF2P25(const std::string& address, unsigned int port)
 {
 	m_YSF2P25Address = address;
 	m_YSF2P25Port    = port;
+}
+
+void CYSFReflectors::setYSFS(const std::string& address, unsigned int port)
+{
+	m_YSFSAddress = address;
+	m_YSFSPort    = port;
 }
 
 void CYSFReflectors::addFCSRoom(const std::string& id, const std::string& name)
@@ -223,6 +231,23 @@ bool CYSFReflectors::load()
 		LogInfo("Loaded YSF2P25");
 	}
 
+	// Add the YSFServer entry
+	if (m_YSFSPort > 0U) {
+		CYSFReflector* refl = new CYSFReflector;
+		refl->m_id      = "00005";
+		refl->m_name    = "YSFS         ";
+		refl->m_desc    = "Link YSFServer  ";
+		refl->m_address = CUDPSocket::lookup(m_YSFSAddress);
+		refl->m_port    = m_YSFSPort;
+		refl->m_count   = "000";
+		refl->m_type    = YT_YSF;
+		refl->m_wiresX  = true;
+
+		m_newReflectors.push_back(refl);
+
+		LogInfo("Loaded YSFS");
+	}
+
 	unsigned int id = 10U;
 	for (std::vector<std::pair<std::string, std::string>>::const_iterator it = m_fcsRooms.cbegin(); it != m_fcsRooms.cend(); ++it, id++) {
 		char text[10U];
@@ -316,7 +341,7 @@ std::vector<CYSFReflector*>& CYSFReflectors::search(const std::string& name)
 		// Origional match function - only matches start of string.
 		// if (trimmed == reflector.substr(0U, len))
 		//	m_search.push_back(*it);
-		
+
 		// New match function searches the whole string
 		unsigned int refSrcPos;
                 for (refSrcPos=0;refSrcPos<reflector.length(); refSrcPos++)
